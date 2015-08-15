@@ -12,7 +12,6 @@ define( "LWC__PLUGIN_DIR", plugin_dir_path(__FILE__) );
 defined( 'ABSPATH' ) or die( 'Illegal access error!' ); 
 
 // include related PHP files (menus.php, etc.)
-require_once( LWC__PLUGIN_DIR . "menus.php" );
 require_once( LWC__PLUGIN_DIR . "formats.php" );
 require_once( LWC__PLUGIN_DIR . "groups.php" ); 
 
@@ -42,12 +41,25 @@ function lawrcustemail_add_admin_menu() {
 add_action( 'admin_menu', 'lawrcustemail_add_admin_menu' );
 
 /**
+ * Handle AJAX requests when the "Send Email" button is clicked (actually email everything)
+ */
+function lawrcustemail_ajax_send()
+{
+	global $wp_filesystem;
+	global $wpdb;
+	
+	$format = $_POST[ 'format_file' ];
+	$group = $_POST[ 'email_file' ];
+}
+add_action( 'wp_ajax_send()', 'lawrcustemail_ajax_send' );
+
+/**
  * Display posts to select in a drop-down menu.
  */
 function lawrcustemail_create_post_select() {
-	echo '<div id="post_select">';
+	echo '<div id="post_select_div">';
 
-	echo '<select>';
+	echo '<select id="post_select">';
      
     // get an array of all WP_Post objects and sort them (most recent articles at the top of the menu, etc.)
  	$get_posts_args = array(
@@ -84,8 +96,33 @@ function lawrcustemail_write_admin_menu() {
     // print out the drop-down menu from which the post to be emailed is selected
 	lawrcustemail_create_post_select();
     
-    // create the editor to select and edit email formatting files 
+    // create the editors to select and edit email and formatting files 
    	lawrcustemail_create_format_editor();
+   	lawrcustemail_create_group_editor();
+   	
+   	// write the submit button to send emails
+   	$submit_args = array(
+   		'onclick' => "lawrcustemail_send_button_clicked()"
+	);
+	submit_button( 'Send Email', 'primary', 'send_email_button', true, $submit_args );
+	
+	?>
+		<script>
+			function lawrcustemail_send_button_clicked() {
+				jQuery(document).ready(function($) {
+					var data = {
+						'action': "send",
+						'format_file': $( '#format_select' ).val(),
+						'email_file': $( '#email_select' ).val() 
+					};
+					
+					jQuery.post(ajaxurl, data, function(response) {
+						alert("Email sent.");
+					});
+				});
+			}
+		</script>
+	<?php
 }
  
 ?>
