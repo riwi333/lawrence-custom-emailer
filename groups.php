@@ -6,33 +6,10 @@
 define( 'LWC__GROUP_DIR_NAME', "email_groups/" );
 define( 'LWC__GROUP_DIR', plugin_dir_path(__FILE__) . LWC__GROUP_DIR_NAME );
 
-define( 'LWC__NEW_GROUP_NAME', "New_Group" );
+define( 'LWC__NEW_GROUP_NAME', "New Group" );
 define( 'LWC__NEW_GROUP', LWC__GROUP_DIR . LWC__NEW_GROUP_NAME );
 
 define( 'LWC__GROUP_IMPOSSIBLE_NAME', "\n\n" );
-
-/*
- * Connect to the WP_Filesystem in order to interact with files
- */
-function lawrcustemail_connect_wp_email()
-{
-	// url for credential form
-	$url = wp_nonce_url( 'admin.php?page=lawrcustemail' );
-	
-	// find the credentials somewhere on the server or display a form (pls not the latter...)
-	if ( false === ($creds = request_filesystem_credentials($url, '', false, false, null)) ) {
-		return false;
-	}
-	
-	// if these aint the credentials...
-	if ( !WP_Filesystem() ) {
-		// making the 3rd parameter 'true' instead of 'false' spams the user with credential forms
-		request_filesystem_credentials( $url, '', true, false, null );
-		return false;
-	}
-	
-	return true;
-}
 
 /*
  * Send the file contents if AJAX sends a request in response to a user selecting a new group <select> option
@@ -43,7 +20,7 @@ function lawrcustemail_ajax_select_email_group()
 	global $wpdb;
 	
 	// connect to WP_Filesystem or send back an error message
-	if ( !lawrcustemail_connect_wp_email() ) {
+	if ( !lawrcustemail_connect_wp() ) {
 		echo "Could not connect to the server. Please reload the page.";
 		wp_die();
 	}
@@ -51,8 +28,8 @@ function lawrcustemail_ajax_select_email_group()
 	$group = $_POST[ 'email_group' ];
 	$contents = "";
 	
-	if ( $wp_filesystem->exists(LWC__GROUP_DIR . $filename) ) {
-		$contents = $wp_filesystem->get_contents( LWC__GROUP_DIR . $filename );
+	if ( $wp_filesystem->exists(LWC__GROUP_DIR . $group) ) {
+		$contents = $wp_filesystem->get_contents( LWC__GROUP_DIR . $group );
 	} else {
 		$contents = "Selected file does not exist.";
 	}
@@ -77,8 +54,8 @@ function lawrcustemail_ajax_group_save_edits()
 	global $wpdb;
 	
 	// connect to WP_Filesystem()
-	if ( !lawrcustemail_connect_wp_email() ) {
-		echo "Could not connect to the filesystem. Please reload the page.";
+	if ( !lawrcustemail_connect_wp() ) {
+		echo "Could not connect to the server. Please reload the page.";
 		wp_die();
 	}
 	
@@ -117,12 +94,12 @@ add_action( 'wp_ajax_group_save_edits', 'lawrcustemail_ajax_group_save_edits' );
 /**
  * Create the "New Group" option if it doesn't exist yet
  */
-function lawrcustemal_create_new_email_group()
+function lawrcustemail_create_new_email_group()
 {
 	global $wp_filesystem;
 	
 	// if we can't connect to the filesystem, etc.
-	if ( !lawrcustemail_connect_wp_email() ) {
+	if ( !lawrcustemail_connect_wp() ) {
 		return new WP_Error( "filesystem_error", "Cannot connect to the filesystem." );
 	}
 	
@@ -163,7 +140,7 @@ function lawrcustemail_create_group_select()
 	global $wp_filesystem;
 	
 	// connect to filesystem, etc.
-	if ( !lawrcustemail_connect_wp_email() ) {
+	if ( !lawrcustemail_connect_wp() ) {
 		return new WP_Error( "filesystem_error", "Cannot connect to filesystem." );
 	}
 	
@@ -187,7 +164,7 @@ function lawrcustemail_create_group_select()
 		</script>
 	<?php
 	
-	echo '<select id="group_select" onchange="lawrcustemail_group_select_change(this.value)">';
+	echo '<select id="group_select" onchange="lawrcustemail_group_select_change(this.value)" autocomplete="off">' . "\n";
 	
 	// round up all files from the directory (recursively search, too)
 	$groups = $wp_filesystem->dirlist( LWC__GROUP_DIR, true, true );
@@ -204,6 +181,8 @@ function lawrcustemail_create_group_select()
 	}
 	
 	echo '</select>';
+	
+	return true;
 }
 
 /**
@@ -213,12 +192,12 @@ function lawrcustemail_create_group_editor()
 {
 	global $wp_filesystem;
 
-	echo '<div id="group_editor_div">';
+	echo '<div id="group_editor_box">' . "\n";
 	
 	// setup the "New Group" option/value
 	$result = lawrcustemail_create_new_email_group();
 	if ( is_wp_error($result) ) {
-		echo $result->get_error_message();
+	    echo $result->get_error_message();
 	}
 	
 	// show drop-down menu of email group options
@@ -230,26 +209,25 @@ function lawrcustemail_create_group_editor()
 	// DISPLAY THE EDITOR!
 	$editor_args = array(
 		'media_buttons' => false,
-		'textarea_rows' => 15,
-		'teeny' => true,
+		'textarea_rows' => 15
 	);
 	wp_editor( $wp_filesystem->get_contents(LWC__NEW_GROUP), 'group_editor', $editor_args );
 	
 	// use AJAX (ugh...) to tell the server that selected file is being saved (when the submit button is clicked)
 	?>
 		<script>
-			function lawrcustemai_email_submit_clicked() {
+			function lawrcustemail_email_submit_clicked() {
 				jQuery(document).ready(function($) {
 					
 					var data = {
-						'action': 'group_submit_clicked',
+						'action': 'group_save_edits',
 						'saved_group_name': $( '#group_select' ).val(),
 						'saved_group_contents': $( '#group_editor' ).val()
 					};
 					
 					/* see lawrcustemail_format_submit_clicked() for details */
 					jQuery.post(ajaxurl, data, function(json_response) {
-						var response = $.parseJSON( json_response );
+					    var response = $.parseJSON( json_response );
 						if ( response.impossible_name == response.sent_name ) {
 							$( '#group_select' ).append( $('<option>', {
 								value: response.sent_name,
@@ -257,7 +235,7 @@ function lawrcustemail_create_group_editor()
 							}));
 						}
 						
-						alert("Email group file saved.");
+						alert("File saved.");
 					});
 				});
 			}

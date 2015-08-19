@@ -1,3 +1,11 @@
-option {
-    color: red;
+.wp-editor-container {
+	width: 200px !important;
+}
+
+#format_editor_box {
+	float: left;
+}
+
+#group_editor_box {
+	float: right;
 }

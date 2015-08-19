@@ -6,34 +6,6 @@ define( "LWC__FORMAT_DIR", plugin_dir_path(__FILE__) . LWC__FORMAT_DIR_NAME );
 define( "LWC__NEW_FILE_NAME", "New_File" );
 define( "LWC__NEW_FILE", LWC__FORMAT_DIR . LWC__NEW_FILE_NAME );
 
-define( "LWC__NAME_OPEN_TAG", "[NAME]" );
-define( "LWC__NAME_CLOSE_TAG", "[/NAME]" );
-define( "LWC__FORMAT_OPEN_TAG", "[FORMAT]" );
-define( "LWC__FORMAT_CLOSE_TAG", "[/FORMAT]" );
-
-/**
- * Connect to WP_Filesystem for work with files
- */
-function lawrcustemail_connect_wp_format() 
-{
-	// url for credential form to be displayed
-	$url = wp_nonce_url( 'admin.php?page=lawrcustemail' );
-	
-	// either find credentials somewhere on the server or display a form
-	if ( false === ($creds = request_filesystem_credentials( $url, '', false, false, null )) ) {
-		return false;
-	}
-	
-	// if these credentials are wrong...
-	if ( !WP_Filesystem( $creds ) ) {
-		// making the 3rd parameter 'true' instead of 'false' keeps prompting for the credentials
-		request_filesystem_credentials( $url, '', true, false, null );
-		return false;
-	}
-	
-	return true;
-}
-
 /**
  * Handle AJAX requests when the user <select>s a new file; send the contents of the new file to populate the textarea
  */
@@ -43,7 +15,7 @@ function lawrcustemail_ajax_select_format_file()
 	global $wpdb;
 	
 	// if we fail to connect to WP_Filesystem, output an error notice 
-	if ( !lawrcustemail_connect_wp_format() ) {
+	if ( !lawrcustemail_connect_wp() ) {
 		echo "Could not connect to the server. Please reload the page.\n";
 		wp_die();
 	}	
@@ -53,7 +25,7 @@ function lawrcustemail_ajax_select_format_file()
 	$contents = "";
 	
 	if ( $wp_filesystem->exists(LWC__FORMAT_DIR . $filename) ) {
-		$contents = $wp_filesystem->get_contents( LWC__FORMAT_DIR . $filename );
+		$contents = $wp_filesystem->get_contents( LWC__FORMAT_DIR . $filename ); 
 	} else {
 		$contents = "Selected file does not exist.";
 	}
@@ -61,7 +33,8 @@ function lawrcustemail_ajax_select_format_file()
 	if ( empty($contents) ) {
 		echo "File is empty.";
 	} else {
-		echo $contents;
+		// escape the output so html tags show up properly
+		echo htmlspecialchars( $contents );
 	}
 	
 	// DIE! to properly send a response to AJAX 
@@ -78,8 +51,8 @@ function lawrcustemail_ajax_format_save_edits()
 	global $wpdb;
 	
 	// if we fail to connect to WP_Filesystem, output an error notice 
-	if ( !lawrcustemail_connect_wp_format() ) {
-		echo "Could not connect to the database. Please reload the page.\n";
+	if ( !lawrcustemail_connect_wp() ) {
+		echo "Could not connect to the server. Please reload the page.\n";
 		wp_die();
 	}	
 	
@@ -141,7 +114,7 @@ function lawrcustemail_create_new_format_file()
 	global $wp_filesystem;
 	
 	// if we can't connect to filesystem, show an error
-	if ( !lawrcustemail_connect_wp_format() ) {
+	if ( !lawrcustemail_connect_wp() ) {
 		return new WP_Error( "filesystem_error", "Cannot connect to filesystem." );
 	}
 
@@ -182,7 +155,7 @@ function lawrcustemail_create_format_select()
 	global $wp_filesystem;
 	
 	// if we can't connect to filesystem, show an error
-	if ( !lawrcustemail_connect_wp_format() ) {
+	if ( !lawrcustemail_connect_wp() ) {
 		return new WP_Error( "filesystem_error", "Cannot connect to filesystem." );
 	}
 	
@@ -205,7 +178,7 @@ function lawrcustemail_create_format_select()
 		</script>
 	<?php
 			
-	echo '<select id="format_select" onchange="lawrcustemail_format_select_change(this.value)">';
+	echo '<select id="format_select" onchange="lawrcustemail_format_select_change(this.value)" autocomplete="off">';
 	
 	// get all files (hidden or not) from the relevant directory (recursively search through directories, too)
 	$files = $wp_filesystem->dirlist( LWC__FORMAT_DIR, $include_hidden = true, $recursive = true );
@@ -232,7 +205,7 @@ function lawrcustemail_create_format_editor()
 {
 	global $wp_filesystem;
 
-	echo '<div id="format_editor_div">';
+	echo '<div id="format_editor_box">';
 	
 	// setup the "New File" option
 	$result = lawrcustemail_create_new_format_file();
@@ -249,10 +222,9 @@ function lawrcustemail_create_format_editor()
 	// display the editor
 	$editor_args = array(
 		'media_buttons' => false,
-		'textarea_rows' => 15,
-		'teeny' => true,
+		'textarea_rows' => 15
 	);
-	wp_editor( $wp_filesystem->get_contents(LWC__NEW_FILE), 'format_editor', $editor_args );
+	wp_editor( htmlspecialchars($wp_filesystem->get_contents(LWC__NEW_FILE)), 'format_editor', $editor_args );
 	
 	// use AJAX to inform PHP that the selected format file is being saved (when the format submit button is clicked)
 	?>
