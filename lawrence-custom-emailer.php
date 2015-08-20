@@ -81,9 +81,10 @@ function lawrcustemail_ajax_send()
 	    wp_die();
 	}
 	
+	$post = $_POST[ 'selected_post' ];
 	$format = $_POST[ 'format_file' ];
 	$group = $_POST[ 'group_file' ];
-	$post = $_POST[ 'selected_post' ];
+	$subject = $_POST[ 'subject_text' ];
 	
 	// get the parsed format file
 	$format_contents = $wp_filesystem->get_contents( LWC__FORMAT_DIR . $format );
@@ -95,7 +96,7 @@ function lawrcustemail_ajax_send()
 	unset( $addresses[0] );	// (the first line is the name of the group file, so skip it)
 	
 	// send the email to each address
-	wp_mail( $addresses, "Test Email", $format_contents, "", "" );
+	wp_mail( $addresses, $subject, $format_contents, "", "" );
 	
 	wp_die();
 }
@@ -147,21 +148,22 @@ function lawrcustemail_write_admin_menu()
    	lawrcustemail_create_format_editor();
    	lawrcustemail_create_group_editor();
    	
+   	// create textarea to write the subject of the sent email
+   	echo '<textarea rows="2" cols="200" id="subject_text">' . "\n";
+   	echo 'Write the subject of the email here!' . "\n";
+   	echo '</textarea>'. "\n";
+   	
    	// write the submit button to send emails
-   	$submit_args = array(
-   		'onclick' => "lawrcustemail_send_button_clicked()"
-	);
-	submit_button( 'Send Email', 'primary', 'send_email_button', true, $submit_args );
-	
-	?>
+   	?>
 		<script>
 			function lawrcustemail_send_button_clicked() {
 				jQuery(document).ready(function($) {
 					var data = {
 						'action': "send",
-						'selected_post' : $( '#post_select' ).val(),
+						'selected_post': $( '#post_select' ).val(),
 						'format_file': $( '#format_select' ).val(),
-						'group_file': $( '#group_select' ).val()
+						'group_file': $( '#group_select' ).val(),
+						'subject_text': $( '#subject_text' ).val()
 					};
 					
 					jQuery.post(ajaxurl, data, function(response) {
@@ -171,6 +173,11 @@ function lawrcustemail_write_admin_menu()
 			}
 		</script>
 	<?php
+   	
+   	$submit_args = array(
+   		'onclick' => "lawrcustemail_send_button_clicked()"
+	);
+	submit_button( 'Send Email', 'primary', 'send_email_button', true, $submit_args );
 }
  
 ?>
