@@ -19,18 +19,12 @@ define( "LWC__IMAGE_CLOSE_TAG", "[/IMAGE]" );
  */
 function lawrcustemail_get_post_img($post_id)
 {
-	if ( has_post_thumbnail($post_id) ) {
-		$images = wp_get_attachment_image_src( get_post_thumbnail_id($post_id) );
-		return $images[0];
-	}
-	else {
-		$media = get_attached_media( 'image', $post_id );
-		$media = array_filter( $media );
-		if ( empty($media) ) {
-			return "";
-		} else {
-			return wp_get_attachment_img_src( $media[0]->ID );
-		}
+	$media = array_filter( get_attached_media('image', $post_id) );
+	if ( empty($media) ) {
+		return "";
+	} else {
+		$first_media = array_shift( array_values($media) );
+		return wp_get_attachment_image( $first_media->ID );
 	}
 }
  
@@ -42,9 +36,17 @@ function lawrcustemail_get_post_img($post_id)
  */ 
 function lawrcustemail_isolate_post_content($post)
 {
-	// remove everything after a [caption] tag
-	$caption_open = stripos( $post, "[caption" );
-	$post = substr( $post, 0, $caption_open );
+	// remove everything within [caption] tags
+	while ( ($caption_open = stripos($post, "[caption")) !== FALSE ) {
+		$caption_close = stripos( $post, "[/caption]" );
+		$post = substr( $post, 0, $caption_open ) . substr( $post, $caption_close + strlen("[/caption]") );
+	}
+	
+	// remove all <img> tags
+	while ( ($img_open = stripos($post, "<img")) !== FALSE ) {
+		$img_close = stripos( $post, "/>", $img_open );
+		$post = substr( $post, 0, $img_open ) . substr( $post, $img_close + strlen("/>") );
+	}
 	
 	return $post;
 }
@@ -54,7 +56,7 @@ function lawrcustemail_isolate_post_content($post)
  *
  * @param String $format The format file to be analyzed.
  * @param Integer $post_id Wordpress ID of the post to be sent in the email.
- * @return 
+ * @return String The prepared html code.
  */
 function lawrcustemail_parse($format, $post_id)
 {
@@ -76,6 +78,16 @@ function lawrcustemail_parse($format, $post_id)
 	$post_content = get_post_field( 'post_content', $post_id );
 	$post_content = lawrcustemail_isolate_post_content( $post_content );
 	$format = str_ireplace( LWC__POST_TAG, $post_content, $format );
+	
+	// add in images specified in [IMAGE] tags
+	while ( ($img_open = stripos($format, LWC__IMAGE_OPEN_TAG)) !== FALSE ) {
+		$img_close = stripos( $format, LWC__IMAGE_CLOSE_TAG );
+		$img_substr = substr( $format, $img_open, $img_close + strlen(LWC__IMAGE_CLOSE_TAG) - $img_open );	// the [IMAGE] tags and everything in between
+		$img_url = str_ireplace( array(LWC__IMAGE_OPEN_TAG, LWC__IMAGE_CLOSE_TAG), '', $img_substr );
+		$img_url = trim( $img_url );
+		$img_html = "<img src=\"$img_url\">";
+		$format = str_ireplace( $img_substr, $img_html, $format );
+	}
 	
 	return $format;
 }
