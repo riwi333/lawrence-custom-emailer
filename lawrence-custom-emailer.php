@@ -45,9 +45,8 @@ function lawrcustemail_connect_wp()
 function lawrcustemail_setup_scripts() 
 {
 	wp_enqueue_style( 'lawrcustemail_stylesheet', plugins_url('lawrence-custom-emailer.css', __FILE__) );
-	wp_enqueue_script( 'lawrcustemail_js', plugins_url('lawrence-custom-emailer.js', __FILE__) );
 }
-add_action( 'wp_enqueue_scripts', 'lawrcustemail_setup_scripts' );
+add_action( 'admin_enqueue_scripts', 'lawrcustemail_setup_scripts' );
 
 /**
  * Allow wp_mail() to send HTML emails (instead of plaintext emails) so formatting can be done.
@@ -107,7 +106,7 @@ add_action( 'wp_ajax_send', 'lawrcustemail_ajax_send' );
  */
 function lawrcustemail_create_post_select() 
 {
-	echo '<select id="post_select" autocomplete="off">';
+	echo '<select id="post-select" autocomplete="off">';
      
     // get an array of all WP_Post objects and sort them (most recent articles at the top of the menu, etc.)
  	$get_posts_args = array(
@@ -141,29 +140,37 @@ function lawrcustemail_create_post_select()
  */ 
 function lawrcustemail_write_admin_menu() 
 {
+	echo '<div id="lwc-plugin">' . "\n";
+
     // print out the drop-down menu from which the post to be emailed is selected
+    echo "<h1> Select the post to send: </h1>\n";
 	lawrcustemail_create_post_select();
     
     // create the editors to select and edit email and formatting files 
+    ?>
+    <div id="lwc-editors">
+    <?
    	lawrcustemail_create_format_editor();
    	lawrcustemail_create_group_editor();
-   	
-   	// create textarea to write the subject of the sent email
-   	echo '<textarea rows="2" cols="200" id="subject_text">' . "\n";
-   	echo 'Write the subject of the email here!' . "\n";
-   	echo '</textarea>'. "\n";
-   	
-   	// write the submit button to send emails
    	?>
+   	</div><!-- lwc-editors -->
+   	
+   	<?php /* create textarea to write the subject of the sent email */ ?>
+   	<div id="email-subject">
+   		<h1> Write the subject of the email: </h1>
+   		<textarea rows="2" id="subject-textarea">Write the subject of the email here!</textarea>
+   	</div><!-- email-subject -->
+   	
+   	<?php /* write the submit button to send emails */ ?>
 		<script>
 			function lawrcustemail_send_button_clicked() {
 				jQuery(document).ready(function($) {
 					var data = {
 						'action': "send",
-						'selected_post': $( '#post_select' ).val(),
-						'format_file': $( '#format_select' ).val(),
-						'group_file': $( '#group_select' ).val(),
-						'subject_text': $( '#subject_text' ).val()
+						'selected_post': $( '#post-select' ).val(),
+						'format_file': $( '#format-select' ).val(),
+						'group_file': $( '#group-select' ).val(),
+						'subject_text': $( '#subject-textarea' ).val()
 					};
 					
 					jQuery.post(ajaxurl, data, function(response) {
@@ -174,10 +181,16 @@ function lawrcustemail_write_admin_menu()
 		</script>
 	<?php
    	
+   	echo '<div id="send-button">' . "\n";
+   	echo "<h1> Send the email! </h1>\n";
+   	
    	$submit_args = array(
    		'onclick' => "lawrcustemail_send_button_clicked()"
 	);
 	submit_button( 'Send Email', 'primary', 'send_email_button', true, $submit_args );
+	echo "</div><!-- send-button -->\n";
+	
+	echo '</div><!-- lwc-plugin -->' . "\n";
 }
  
 ?>

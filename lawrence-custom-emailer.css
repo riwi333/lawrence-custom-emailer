@@ -1,11 +1,24 @@
-.wp-editor-container {
-	width: 200px !important;
+/* look, i knooooooow i'm going against eric's advice by not using SASS and my CSS is very poorly formatted,
+ * but the graphical end of web-design is honestly one of my strongest weaknesses, and this is a back-end
+ * page anyway, so the styling isn't the important part :( */
+
+#lwc-editors {
+	width: 100%;
+	margin: 0 auto;
 }
 
-#format_editor_box {
+#format-editor, #group-editor {
 	float: left;
 }
 
-#group_editor_box {
-	float: right;
+#format-editor {
+	width: 750px;
+}
+
+#group-editor {
+	width: 750px;
+}
+
+#format-select, #group-select {
+	width: 85ex;
 }

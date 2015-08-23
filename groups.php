@@ -156,7 +156,7 @@ function lawrcustemail_create_group_select()
 				 	};
 				 	
 				 	jQuery.post(ajaxurl, data, function(response) {
-				 		$( '#group_editor' ).html(response);
+				 		$( '#group-editor-textarea' ).html(response);
 					});
 					
 				});
@@ -164,7 +164,7 @@ function lawrcustemail_create_group_select()
 		</script>
 	<?php
 	
-	echo '<select id="group_select" onchange="lawrcustemail_group_select_change(this.value)" autocomplete="off">' . "\n";
+	echo '<select id="group-select" onchange="lawrcustemail_group_select_change(this.value)" autocomplete="off">' . "\n";
 	
 	// round up all files from the directory (recursively search, too)
 	$groups = $wp_filesystem->dirlist( LWC__GROUP_DIR, true, true );
@@ -192,7 +192,8 @@ function lawrcustemail_create_group_editor()
 {
 	global $wp_filesystem;
 
-	echo '<div id="group_editor_box">' . "\n";
+	echo '<div id="group-editor">' . "\n";
+	echo "<h1> Choose and edit the email group: </h1>\n";
 	
 	// setup the "New Group" option/value
 	$result = lawrcustemail_create_new_email_group();
@@ -206,30 +207,25 @@ function lawrcustemail_create_group_editor()
 		echo $result->get_error_message();
 	}
 	
-	// DISPLAY THE EDITOR!
-	$editor_args = array(
-		'media_buttons' => false,
-		'textarea_rows' => 15
-	);
-	wp_editor( $wp_filesystem->get_contents(LWC__NEW_GROUP), 'group_editor', $editor_args );
-	
-	// use AJAX (ugh...) to tell the server that selected file is being saved (when the submit button is clicked)
+	// DISPLAY THE EDITOR! and use AJAX (ugh...) to tell the server that selected file is being saved (when the submit button is clicked)
 	?>
+		<textarea id="group-editor-textarea"><?php echo $wp_filesystem->get_contents(LWC__NEW_GROUP); ?></textarea>
+	
 		<script>
 			function lawrcustemail_email_submit_clicked() {
 				jQuery(document).ready(function($) {
 					
 					var data = {
 						'action': 'group_save_edits',
-						'saved_group_name': $( '#group_select' ).val(),
-						'saved_group_contents': $( '#group_editor' ).val()
+						'saved_group_name': $( '#group-select' ).val(),
+						'saved_group_contents': $( '#group-editor-textarea' ).val()
 					};
 					
 					/* see lawrcustemail_format_submit_clicked() for details */
 					jQuery.post(ajaxurl, data, function(json_response) {
 					    var response = $.parseJSON( json_response );
 						if ( response.impossible_name == response.sent_name ) {
-							$( '#group_select' ).append( $('<option>', {
+							$( '#group-select' ).append( $('<option>', {
 								value: response.sent_name,
 								text: response.sent_name
 							}));

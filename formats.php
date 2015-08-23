@@ -57,7 +57,7 @@ function lawrcustemail_ajax_format_save_edits()
 	}	
 	
 	// extract the name of the file from the formatting (look for what's between [NAME] tags)
-	$contents = $_POST[ 'saved_format_file_contents' ];
+	$contents = stripslashes( $_POST[ 'saved_format_file_contents' ] );
 	$name_open = stripos( $contents, LWC__NAME_OPEN_TAG );
 	$name_close = stripos( $contents, LWC__NAME_CLOSE_TAG );
 	$name = substr( $contents, $name_open + strlen(LWC__NAME_OPEN_TAG) + 1, $name_close - ($name_open + strlen(LWC__NAME_OPEN_TAG) + 1));
@@ -171,14 +171,14 @@ function lawrcustemail_create_format_select()
 					};
 					
 					jQuery.post(ajaxurl, data, function(response) {
-						$( '#format_editor' ).html(response);
+						$( '#format-editor-textarea' ).html(response);
 					});
 				});
 			}
 		</script>
 	<?php
 			
-	echo '<select id="format_select" onchange="lawrcustemail_format_select_change(this.value)" autocomplete="off">';
+	echo '<select id="format-select" onchange="lawrcustemail_format_select_change(this.value)" autocomplete="off">';
 	
 	// get all files (hidden or not) from the relevant directory (recursively search through directories, too)
 	$files = $wp_filesystem->dirlist( LWC__FORMAT_DIR, $include_hidden = true, $recursive = true );
@@ -205,7 +205,8 @@ function lawrcustemail_create_format_editor()
 {
 	global $wp_filesystem;
 
-	echo '<div id="format_editor_box">';
+	echo '<div id="format-editor">';
+	echo "<h1> Select and edit the email format: </h1>\n";
 	
 	// setup the "New File" option
 	$result = lawrcustemail_create_new_format_file();
@@ -219,22 +220,17 @@ function lawrcustemail_create_format_editor()
 		echo $result->get_error_message();
 	}
 	
-	// display the editor
-	$editor_args = array(
-		'media_buttons' => false,
-		'textarea_rows' => 15
-	);
-	wp_editor( htmlspecialchars($wp_filesystem->get_contents(LWC__NEW_FILE)), 'format_editor', $editor_args );
-	
-	// use AJAX to inform PHP that the selected format file is being saved (when the format submit button is clicked)
+	// display the editor and use AJAX to inform PHP that the selected format file is being saved (when the format submit button is clicked)
 	?>
+		<textarea id="format-editor-textarea"><?php echo htmlspecialchars($wp_filesystem->get_contents(LWC__NEW_FILE)); ?></textarea>
+		
 		<script>
 			function lawrcustemail_format_submit_clicked() {
 				jQuery(document).ready(function($) {
 					var data = {
 						'action': "format_save_edits",
-						'saved_format_filename': $( '#format_select' ).val(),
-						'saved_format_file_contents': $( "#format_editor" ).val()
+						'saved_format_filename': $( '#format-select' ).val(),
+						'saved_format_file_contents': $( "#format-editor-textarea" ).val()
 					};
 					
 					/* if the response isnt the name closing tag (which CAN'T be a formatting filename), then add a new
@@ -243,13 +239,10 @@ function lawrcustemail_create_format_editor()
 					jQuery.post(ajaxurl, data, function(json_response) {
 						var response = $.parseJSON( json_response );
 						if ( response.name_closing_tag != response.sent_name ) {
-							$( '#format_select' ).append( $('<option>', {
+							$( '#format-select' ).append( $('<option>', {
 								value: response.sent_name,
 								text: response.sent_name
 							}));
-							
-							/* [BUG]: after saving a file, the <select> tag for formatting becomes stuck */
-								
 						} 
 						
 						alert("File saved.");
@@ -265,7 +258,7 @@ function lawrcustemail_create_format_editor()
 	
 	submit_button( "Save Edits", 'primary', 'format_submit_button', true, $submit_args );
 	
-	echo '</div>' . "\n";
+	echo '</div><!-- format-editor -->' . "\n"; 
 }
 
 ?>
