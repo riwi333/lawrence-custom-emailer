@@ -7,6 +7,7 @@ Author: Ricky Williams
 */
 
 define( "LWC__PLUGIN_DIR", plugin_dir_path(__FILE__) );
+define( "LWC__FROM_ADDRESS", "lvillelawrence@gmail.com" );
  
 // prevent direct access to plugin file
 defined( 'ABSPATH' ) or die( 'Illegal access error!' ); 
@@ -56,6 +57,24 @@ function lawrcustemail_allow_html_mail()
 	return "text/html";
 }
 add_filter( 'wp_mail_content_type', 'lawrcustemail_allow_html_mail' );
+
+/**
+ * Edit the shown email address in sent emails.
+ */
+function lawrcustemail_set_from_address($content_type)
+{
+	return LWC__FROM_ADDRESS;
+}
+add_filter( 'wp_mail_from', 'lawrcustemail_set_from_address' );
+
+/**
+ * Edit the shown sender name in sent emails.
+ */
+function lawrcustemail_set_from_name($name)
+{
+	return "The Lawrence";
+}
+add_filter( 'wp_mail_from_name', 'lawrcustemail_set_from_name' );
 
 /** 
  * Add an admin dashboard menu to access the email customizer and emailer.
