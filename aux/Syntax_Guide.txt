@@ -1,23 +1,17 @@
 FORMATTING FILES:
 
-A formatting file is a valid html file containing keywords that are enclosed in square braces (ex. [NAME], [/FORMAT]).
-The file is processed right before it is sent. The plugin replaces instances of keywords and text between keywords
-with the appropriate content. The keywords currently supported are:
+A formatting file is a valid html file containing keywords that are enclosed in square braces (ex. [NAME], [/FORMAT]). The file is processed right before it is sent. The plugin replaces instances of keywords and text between keywords with the appropriate content. The keywords currently supported are:
 
 KEYWORD(s)				VALUE					
-[NAME], [/NAME]			The name of the formatting file must come between these two tags. Whitespace before and after 
-						the name is ignored.
+[NAME], [/NAME]			The name of the formatting file must come between these two tags. Whitespace before and after the name is ignored.
 [FORMAT], [/FORMAT]		The actual HTML content comes between these two tags.
 [POST]					The content of the post is put in place of this tag.
 [TITLE]					The title of the post is put in place of this tag.
 [AUTHOR]				The author of the post is put in place of this tag.
-[POST_IMG]				If the post has a featured image, it is put in place of this tag. Otherwise, the keyword is
-						just replaced with an empty string ("")
-[IMAGE], [/IMAGE]		The keywords and any text between are replaced with a chosen image. The url 
-						(the 'img src' attribute) for a desired image should be placed between the keywords.
+[POST_IMG]				If the post has a featured image, it is put in place of this tag. Otherwise, the keyword is just replaced with an empty string ("")
+[IMAGE], [/IMAGE]		The keywords and any text between are replaced with a chosen image. The url (the 'img src' attribute) for a desired image should be placed between the keywords.
 
-All styling must occur within the file; using the <style> tags is ideal. Since CSS ids and classes aren't added
-to the text that replaces keywords, keywords can be wrapped with <span> tags to allow appropriate styling.
+All styling must occur within the file; using the <style> tags is ideal. Since CSS ids and classes aren't added to the text that replaces keywords, keywords can be wrapped with <span> tags to allow appropriate styling.
 
 example (this just prints out the selected post with all the text made red):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
