@@ -1,12 +1,13 @@
 <?php
 
-
 // definitons of formatting tags
 define( "LWC__NAME_OPEN_TAG", "[NAME]" );
 define( "LWC__NAME_CLOSE_TAG", "[/NAME]" );
 define( "LWC__FORMAT_OPEN_TAG", "[FORMAT]" );
 define( "LWC__FORMAT_CLOSE_TAG", "[/FORMAT]" );
 define( "LWC__POST_TAG", "[POST]" );
+define( "LWC__POST_TITLE_TAG", "[TITLE]" );
+define( "LWC__POST_AUTHOR_TAG", "[AUTHOR]" );
 define( "LWC__POST_IMAGE_TAG", "[POST_IMG]" );
 define( "LWC__IMAGE_OPEN_TAG", "[IMAGE]" );
 define( "LWC__IMAGE_CLOSE_TAG", "[/IMAGE]" );
@@ -74,10 +75,13 @@ function lawrcustemail_parse($format, $post_id)
 	$featured_img_html = lawrcustemail_get_post_img( $post_id );
 	$format = str_ireplace( LWC__POST_IMAGE_TAG, $featured_img_html, $format );
 	
-	// replace the [POST] tag with the post content
-	$post_content = get_post_field( 'post_content', $post_id );
-	$post_content = lawrcustemail_isolate_post_content( $post_content );
+	// replace the [POST], [POST_TITLE] and [POST_AUTHOR] tags with the relevant content
+	$post_content = lawrcustemail_isolate_post_content( get_post_field('post_content', $post_id) );
+	$post_title = get_post_field( 'post_title', $post_id );
+	$post_author = get_post_field( 'post_author', $post_id );
 	$format = str_ireplace( LWC__POST_TAG, $post_content, $format );
+	$format = str_ireplace( LWC__POST_TITLE_TAG, $post_title, $format );
+	$format = str_ireplace( LWC__POST_AUTHOR_TAG, $post_author, $format );
 	
 	// add in images specified in [IMAGE] tags
 	while ( ($img_open = stripos($format, LWC__IMAGE_OPEN_TAG)) !== FALSE ) {
