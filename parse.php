@@ -75,12 +75,22 @@ function lawrcustemail_parse($format, $post_id)
 	$featured_img_html = lawrcustemail_get_post_img( $post_id );
 	$format = str_ireplace( LWC__POST_IMAGE_TAG, $featured_img_html, $format );
 	
-	// replace the [POST], [POST_TITLE] and [POST_AUTHOR] tags with the relevant content
+	// replace the [POST], [POST_TITLE] tags with the relevant content
 	$post_content = lawrcustemail_isolate_post_content( get_post_field('post_content', $post_id) );
 	$post_title = get_post_field( 'post_title', $post_id );
-	$post_author = get_post_field( 'post_author', $post_id );
 	$format = str_ireplace( LWC__POST_TAG, $post_content, $format );
 	$format = str_ireplace( LWC__POST_TITLE_TAG, $post_title, $format );
+	
+	/* since someone decided to use the 'Custom Author Byline' plugin (which is really basic), processing the [AUTHOR]
+	 * tag takes a bit of extra code (you have to get the post object by its ID and then get the metadata for the the 
+	 * post since the custom author byline plugin filters that. I could probs just edit functions.php, but then the 
+	 * plugin wouldn't be isolated) */
+	$post_obj = get_post( $post_id );
+	setup_postdata( $post_obj );
+	$post_author = get_post_meta($post_obj->ID, 'author', TRUE);
+	if ( !$post_author ) {
+		$post_author = "admin";
+	}
 	$format = str_ireplace( LWC__POST_AUTHOR_TAG, $post_author, $format );
 	
 	// add in images specified in [IMAGE] tags
