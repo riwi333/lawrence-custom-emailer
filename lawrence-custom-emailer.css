@@ -7,18 +7,37 @@
 	margin: 0 auto;
 }
 
+#lwc-editors textarea {
+    width: 100%;
+    height: 300px;
+}
+
 #format-editor, #group-editor {
+    padding-top: 1em;
+    width: 750px;
 	float: left;
 }
 
 #format-editor {
-	width: 750px;
+    margin-right: 10px;
 }
 
 #group-editor {
-	width: 750px;
+    margin-left: 10px;
 }
 
 #format-select, #group-select {
-	width: 85ex;
+	width: 100%;
+}
+
+#email-subject {
+    padding-top: 37em; /* please ignore this hackish fix */
+}
+
+#subject-textarea {
+    width: 1000px;
+}
+
+#send-button {
+    padding-top: 2em;
 }
