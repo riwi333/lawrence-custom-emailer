@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# upload relevant files to ftp.thelawrence.org automatically
+# upload relevant files to ftp.thelawrence.org automatically (for the lawrence-custom-emailer plugin)
 # credentials not included :)
 # (8/10/2015)
 
@@ -13,7 +13,7 @@ import sys
 del sys.argv[0]
 
 # NOTE: only files with names in total[] will be uploaded
-path_to_total = '/home/trifork/lawr/plugin/lawrence-custom-emailer/'
+path_to_total = '/path/to/lawrence-custom-emailer/'
 total = [	
 			'lawrence-custom-emailer.php',
 			'lawrence-custom-emailer.css',
